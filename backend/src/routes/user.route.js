@@ -1,4 +1,3 @@
-import app from "../app.js";
 import { Router } from "express";
 import { registerUser } from "../controller/user.controller.js";
 
