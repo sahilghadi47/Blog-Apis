@@ -1,7 +1,29 @@
 import { Router } from "express";
-import { registerUser } from "../controller/user.controller.js";
-
+import {
+	registerUser,
+	loginUser,
+	logoutUser,
+	getUser,
+	updateUser,
+	updateUserPassword,
+	updateProfilePicture,
+	getUserById,
+} from "../controller/user.controller.js";
+import fileupload from "../config/multer.config.js";
+import { verifyJwt } from "../config/auth.config.js";
 const userRouter = Router();
-userRouter.get("/register", registerUser);
 
+userRouter.post("/register", registerUser);
+userRouter.post("/login", loginUser);
+userRouter.post("/logout", verifyJwt, logoutUser);
+userRouter.get("/user-profile", verifyJwt, getUser);
+userRouter.patch("/update-user", verifyJwt, updateUser);
+userRouter.patch("/update-password", verifyJwt, updateUserPassword);
+userRouter.put(
+	"/update-profile-picture",
+	verifyJwt,
+	fileupload.single("avatar"),
+	updateProfilePicture
+);
+userRouter.get("/u/:id", verifyJwt, getUserById);
 export default userRouter;
