@@ -1,32 +1,38 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import dotenv from "dotenv";
+import fs from "fs";
 
+dotenv.config({
+	path: ".env",
+});
 // Configuration
 cloudinary.config({
-	cloud_name: process.env.CLOUD_NAME,
-	api_key: process.env.API_KEY,
-	api_secret: process.env.API_SECRET,
-	secure: true,
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadImage = async (localFilePath) => {
+const uploadImage = async (localFilePath, path) => {
 	try {
-		if (!localFilePath) return;
+		if (!localFilePath) return null;
 		const response = await cloudinary.uploader.upload(localFilePath, {
-			folder: "blog",
 			resource_type: "auto",
+			folder: `Blog/${path}`,
 		});
 		fs.unlinkSync(localFilePath);
-		return { url: response.secure_url, publicId: response.public_id };
+		return response;
 	} catch (error) {
 		fs.unlinkSync(localFilePath);
-		return { error };
+		throw error;
 	}
 };
 
 const deleteImage = async (publicId) => {
-	await cloudinary.uploader.destroy(publicId);
+	try {
+		const response = await cloudinary.uploader.destroy(publicId);
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export { uploadImage, deleteImage };
