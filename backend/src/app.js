@@ -1,4 +1,4 @@
-import express, { application } from "express";
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -18,6 +18,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public/temp"));
 
 import userRouter from "./routes/user.route.js";
+import postRouter from "./routes/post.route.js";
 
 app.use("/Mern-Blog/api/v1/user", userRouter);
+
+app.use("/Mern-Blog/api/v1/post", postRouter);
+
 export default app;

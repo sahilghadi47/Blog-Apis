@@ -4,6 +4,7 @@ const postSchema = new mongoose.Schema(
 		title: {
 			type: String,
 			required: true,
+			index: true,
 		},
 		content: {
 			type: String,
@@ -13,6 +14,7 @@ const postSchema = new mongoose.Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "User",
 			required: true,
+			index: true,
 		},
 		assets: {
 			type: Object,
@@ -39,4 +41,5 @@ const postSchema = new mongoose.Schema(
 	}
 );
 
-export default Post = mongoose.model("Post", postSchema);
+const Post = mongoose.model("Post", postSchema);
+export default Post;
