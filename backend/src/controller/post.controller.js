@@ -4,9 +4,9 @@ import {
 	ErrorHandler as Error,
 	ResponseHandler as Response,
 } from "../utils/reqResHandler.js";
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { uploadImage, deleteImage } from "../config/cloud.config.js";
-import functionHandler from "../utils/functionHandler";
+import functionHandler from "../utils/functionHandler.js";
 
 /*
 - _createPost_
@@ -32,8 +32,8 @@ const createPost = functionHandler(async (req, res) => {
 	if (!file) throw new Error(400, "Please upload an FIle");
 
 	// Upload the file to cloud storage
-	const path = `users/${user.username}/posts`;
-	const uploadedFile = await uploadImage(file, path);
+	const path = `users/${user.username.replace("_", "")}/posts`;
+	const uploadedFile = await uploadImage(file?.path, String(path));
 	if (!uploadedFile) throw new Error(400, "File not uploaded");
 
 	// Create a new post document in the database
@@ -87,20 +87,28 @@ const getAllPosts = functionHandler(async (req, res) => {
 	if (!posts || posts.length === 0) throw new Error(404, "Posts not found");
 
 	// Return a success response with the retrieved posts
-	return res
-		.status(200)
-		.json(new Response(200, posts, "Posts retrieved successfully"));
+	return res.status(200).json(
+		new Response(
+			200,
+			{
+				length: posts.length,
+				posts: posts,
+			},
+			"Posts retrieved successfully"
+		)
+	);
 });
 
 // Function to retrieve a single blog post by ID
 const getPostById = functionHandler(async (req, res) => {
 	// Get the post ID from the request parameters
-	const { id } = req.params;
+	const id = new mongoose.Types.ObjectId(req.params);
 
 	// Validate the post ID
 	if (!isValidObjectId(id)) throw new Error(400, "Invalid post id");
 
 	// Find the post by ID
+	// mongoose.Types.ObjectId(id)
 	const post = await Post.findById(id);
 
 	// Return a success response with the retrieved post
@@ -112,7 +120,7 @@ const getPostById = functionHandler(async (req, res) => {
 // Function to update an existing blog post
 const updatePost = functionHandler(async (req, res) => {
 	// Get the post ID from the request parameters
-	const { id } = req.params;
+	const id = new mongoose.Types.ObjectId(req.params);
 
 	// Validate the post ID
 	if (!isValidObjectId(id)) throw new Error(400, "Invalid post id");
@@ -155,7 +163,7 @@ const updatePost = functionHandler(async (req, res) => {
 // Function to delete a blog post
 const deletePost = functionHandler(async (req, res) => {
 	// Get the post ID from the request parameters
-	const { id } = req.params;
+	const id = new mongoose.Types.ObjectId(req.params);
 
 	// Validate the post ID
 	if (!isValidObjectId(id)) throw new Error(400, "Invalid post id");
@@ -189,15 +197,14 @@ const deletePost = functionHandler(async (req, res) => {
 const getPostsByUser = functionHandler(async (req, res) => {
 	// Get the username from the request parameters
 	const { username } = req.params;
-
 	// Find the user by username
 	const user = await User.findOne({ username });
-
 	// If the user is not found, throw a 404 error
 	if (!user) throw new Error(404, "User not found");
 
 	// Find all posts associated with the user's ID
-	const posts = await Post.find({ author: user._id })
+	const author = user._id;
+	const posts = await Post.find({ author: author })
 		.sort({ createdAt: -1 })
 		.exec();
 
@@ -205,6 +212,7 @@ const getPostsByUser = functionHandler(async (req, res) => {
 	if (!posts || posts.length === 0) throw new Error(404, "Posts not found");
 
 	// Return a success response with the retrieved posts
+	console.log(posts);
 	return res
 		.status(200)
 		.json(new Response(200, posts, "Posts retrieved successfully"));

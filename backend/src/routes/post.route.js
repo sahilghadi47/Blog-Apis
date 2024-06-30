@@ -18,6 +18,6 @@ router.get("/getAllPosts", getAllPosts);
 router.get("/getPostById/:id", getPostById);
 router.put("/updatePost/:id", updatePost);
 router.delete("/deletePost/:id", deletePost);
-router.get("/user/:id", getPostsByUser);
+router.get("/user/:username", getPostsByUser);
 
 export default router;
