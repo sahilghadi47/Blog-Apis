@@ -8,6 +8,7 @@ import {
 	updateUserPassword,
 	updateProfilePicture,
 	getUserById,
+	searchUserByUserName,
 } from "../controller/user.controller.js";
 import fileupload from "../config/multer.config.js";
 import { verifyJwt } from "../config/auth.config.js";
@@ -26,4 +27,6 @@ userRouter.put(
 	updateProfilePicture
 );
 userRouter.get("/u/:id", verifyJwt, getUserById);
+userRouter.get("/u/:username", verifyJwt, searchUserByUserName);
+
 export default userRouter;

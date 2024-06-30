@@ -203,6 +203,25 @@ const getUserById = functionHandler(async (req, res) => {
 		.status(200)
 		.json(new Response(200, user, "User fetched successfully"));
 });
+
+const searchUserByUserName = functionHandler(async (req, res) => {
+	const { username } = req.params;
+	if (!username) throw new Error(404, "User not found");
+
+	const user = await User.findOne({ username }).select(
+		"-password -refreshToken"
+	);
+
+	if (!user)
+		return res
+			.status(404)
+			.json(new Response(404, {}, "No such user found"));
+
+	return res
+		.status(200)
+		.json(new Response(200, user, "User fetched successfully"));
+});
+
 export {
 	registerUser,
 	loginUser,
@@ -212,4 +231,5 @@ export {
 	updateUserPassword,
 	updateProfilePicture,
 	getUserById,
+	searchUserByUserName,
 };
