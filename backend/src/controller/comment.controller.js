@@ -6,7 +6,7 @@ Manages comments on blog posts, including adding, editing, and deleting comments
 - _updateComment_
 - _deleteComment_
 */
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import Comment from "../models/comment.model.js";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
@@ -20,10 +20,10 @@ const addComment = functionHandler(async (req, res) => {
 	const user = await User.findById(req.user?._id);
 	if (!user) throw new Error(404, "User not found");
 
-	const post = await Post.findById(req.params);
+	const post = await Post.findById(new mongoose.Types.ObjectId(req.params));
 	if (!post) throw new Error(404, "post not found");
 
-	const content = req.body;
+	const { content } = req.body;
 	if (!content) throw new Error(400, "Enter valid comment");
 
 	const comment = await Comment.create({
@@ -45,63 +45,90 @@ const addComment = functionHandler(async (req, res) => {
 });
 
 const getCommentsByPostId = functionHandler(async (req, res) => {
-	const comments = await Comment.find({ post: req.params });
+	const comments = await Comment.aggregate([
+		{
+			$match: {
+				post: new mongoose.Types.ObjectId(req.params),
+			},
+		},
+		{
+			$lookup: {
+				from: "users",
+				localField: "author",
+				foreignField: "_id",
+				as: "author",
+				pipeline: [{ $project: { username: 1, avatar: 1 } }],
+			},
+		},
+		{
+			$project: {
+				comment: 1,
+				author: { $arrayElemAt: ["$author", 0] },
+			},
+		},
+	]);
+
 	if (!comments) throw new Error(404, "No comments found for this post");
-
-	return res.status(200).json(new Response(200, comments, "Comments found"));
-});
-
-const updateComment = functionHandler(async (req, res) => {
-	const user = await User.findById(req.user?._id);
-	if (!user) throw new Error(404, "User not found");
-
-	const comment = await Comment.findById(req.body);
-	if (!comment) throw new Error(404, "Comment not found");
-
-	if (comment.author.toString() !== user._id.toString())
-		throw new Error(400, "Unauthorised user request");
-
-	const content = req.body;
-	if (!content) throw new Error(400, "Enter valid comment");
-
-	const updatedComment = await Comment.findByIdAndUpdate(
-		comment._id,
-		{ comment: content },
-		{ new: true }
-	);
-	if (!updatedComment) throw new Error(500, "Comment update failed");
 
 	return res
 		.status(200)
-		.json(
-			new Response(200, updatedComment, "Comment updated successfully")
+		.json(new Response(200, comments, "Comments fetched successfully"));
+});
+
+const updateComment = functionHandler(async (req, res) => {
+	try {
+		const user = await User.findById(req.user?._id);
+		if (!user) throw new Error(404, "User not found");
+
+		const { id, content } = req.body;
+
+		const comment = await Comment.findById(id);
+		if (!comment) throw new Error(404, "Comment not found");
+
+		if (!content) throw new Error(400, "Enter valid comment");
+
+		if (comment.author.toString() !== user._id.toString())
+			throw new Error(
+				400,
+				"Unauthorised user request, you are not the author of this comment"
+			);
+
+		const updatedComment = await Comment.findByIdAndUpdate(
+			comment._id,
+			{ comment: content },
+			{ new: true }
 		);
+		return res
+			.status(200)
+			.json(
+				new Response(
+					200,
+					updatedComment,
+					"Comment updated successfully"
+				)
+			);
+	} catch (error) {
+		res.status(500).json(new Error(500, error.message));
+	}
 });
 
 const deleteComment = functionHandler(async (req, res) => {
 	const user = await User.findById(req.user?._id);
 	if (!user) throw new Error(404, "User not found");
+	const { id } = req.body;
+	console.log(id);
+	const comment = await Comment.findById(new mongoose.Types.ObjectId(id));
+	console.log(comment);
 
-	const comment = await Comment.findById(req.body);
-	if (!comment) throw new Error(404, "Comment not found");
-
-	if (comment.author.toString() !== user._id.toString())
-		throw new Error(400, "Unauthorised user request");
-
-	const deletedComment = await Comment.findByIdAndDelete(comment._id);
-	if (!deletedComment) throw new Error(500, "Comment deletion failed");
-
-	Post.findByIdAndUpdate(
-		comment.post,
-		{ $pull: { comments: mongoose.Types.ObjectId(comment._id) } },
+	const post = await Post.findByIdAndUpdate(
+		comment?.post,
+		{ $pull: { comments: comment._id } },
 		{ new: true }
 	);
 
 	return res
 		.status(200)
-		.json(
-			new Response(200, deletedComment, "Comment deleted successfully")
-		);
+		.json(new Response(200, post, "Comment deleted successfully"));
 });
 
 export { addComment, getCommentsByPostId, updateComment, deleteComment };

@@ -10,9 +10,9 @@ import {
 const commentRouter = Router();
 commentRouter.use(verifyJwt);
 
-commentRouter.route("/addComment", addComment);
-commentRouter.route("/u/:id", getCommentsByPostId);
-commentRouter.route("/update-comment", updateComment);
-commentRouter.route("/delete-comment", deleteComment);
+commentRouter.post("/addComment/:id", addComment);
+commentRouter.get("/post/:id", getCommentsByPostId);
+commentRouter.patch("/update-comment", updateComment);
+commentRouter.delete("/delete-comment", deleteComment);
 
 export default commentRouter;
