@@ -20,13 +20,19 @@ app.use(express.static("public/temp"));
 //importing routes
 
 import userRouter from "./routes/user.route.js";
+
 import postRouter from "./routes/post.route.js";
+
 import commentRouter from "./routes/comments.route.js";
+
+import likeRouter from "./routes/likes.route.js";
 
 app.use("/Mern-Blog/api/v1/user", userRouter);
 
 app.use("/Mern-Blog/api/v1/post", postRouter);
 
 app.use("/Mern-Blog/api/v1/comment", commentRouter);
+
+app.use("/Mern-Blog/api/v1/like", likeRouter);
 
 export default app;
