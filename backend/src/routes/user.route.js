@@ -27,6 +27,6 @@ userRouter.put(
 	updateProfilePicture
 );
 userRouter.get("/u/:id", verifyJwt, getUserById);
-userRouter.get("/u/:username", verifyJwt, searchUserByUserName);
+userRouter.get("/username/:username", verifyJwt, searchUserByUserName);
 
 export default userRouter;

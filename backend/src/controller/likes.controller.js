@@ -72,8 +72,8 @@ const getLikesByPostId = functionHandler(async (req, res) => {
 		},
 		{
 			$project: {
-				avatar: "$user.avatar",
 				username: "$user.username",
+				avatar: "$user.avatar",
 			},
 		},
 	]);
